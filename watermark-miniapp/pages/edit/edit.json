@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "loading-overlay": "../../components/loading-overlay/loading-overlay"
+  },
+  "navigationBarTitleText": "涂抹水印区域",
+  "disableScroll": true
+}

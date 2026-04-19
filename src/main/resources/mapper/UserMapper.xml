@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.doubao.watermark.mapper.UserMapper">
+
+    <!-- 悲观锁扣减次数 -->
+    <update id="consumeCredit">
+        UPDATE user
+        SET credits = credits - 1, updated_at = NOW()
+        WHERE id = #{userId} AND credits > 0
+    </update>
+
+    <!-- 退还次数 -->
+    <update id="refundCredit">
+        UPDATE user
+        SET credits = credits + 1, updated_at = NOW()
+        WHERE id = #{userId}
+    </update>
+
+    <!-- 增加广告次数和奖励（防并发：WHERE 限制每日最多5次） -->
+    <update id="addAdCountAndCredits">
+        UPDATE user
+        SET credits = credits + 3, daily_ad_count = daily_ad_count + 1, updated_at = NOW()
+        WHERE id = #{userId} AND daily_ad_count &lt; 5
+    </update>
+
+    <!-- 增加分享次数和奖励（防并发：WHERE 限制每日最多2次） -->
+    <update id="addShareCountAndCredits">
+        UPDATE user
+        SET credits = credits + 2, daily_share_count = daily_share_count + 1, updated_at = NOW()
+        WHERE id = #{userId} AND daily_share_count &lt; 2
+    </update>
+
+    <!-- 每日重置 -->
+    <update id="resetDailyCredits">
+        UPDATE user
+        SET credits = 3, daily_ad_count = 0, daily_share_count = 0, last_reset_date = CURDATE(), updated_at = NOW()
+        WHERE id = #{userId} AND (last_reset_date IS NULL OR last_reset_date &lt; CURDATE())
+    </update>
+
+</mapper>

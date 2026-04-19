@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>上传图片 - AI去水印</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f7f7f7; }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-200">
+<div class="w-[375px] h-[812px] bg-white rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-black flex flex-col">
+<!-- 导航栏 -->
+<div class="h-12 flex items-center px-4 mt-10">
+<a class="p-2" href="index.html">
+<iconify-icon class="text-2xl text-gray-800" icon="solar:alt-arrow-left-linear"></iconify-icon>
+</a>
+<h1 class="flex-1 text-center font-bold text-gray-800 pr-8">选择图片</h1>
+</div>
+<div class="flex-1 px-6 pt-6">
+<!-- 引导卡片 -->
+<div class="bg-gray-50 border-2 border-dashed border-gray-200 rounded-3xl h-64 flex flex-col items-center justify-center p-8 text-center mb-8">
+<div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-4">
+<iconify-icon class="text-4xl text-green-500" icon="solar:cloud-upload-bold-duotone"></iconify-icon>
+</div>
+<p class="text-gray-800 font-bold">添加需要处理的图片</p>
+<p class="text-xs text-gray-400 mt-2">支持 JPG, PNG, WEBP 格式<br/>图片大小不超过 10MB</p>
+</div>
+<!-- 按钮组 -->
+<div class="space-y-4">
+<a class="w-full py-4 bg-green-500 text-white rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg shadow-green-200 active:scale-95 transition-transform" href="edit.html">
+<iconify-icon class="text-xl" icon="solar:gallery-add-bold"></iconify-icon>
+<span>从相册选择</span>
+</a>
+<button class="w-full py-4 bg-white border border-gray-200 text-gray-800 rounded-2xl font-bold flex items-center justify-center space-x-2 active:scale-95 transition-transform" onclick="alert('模拟开启相机')">
+<iconify-icon class="text-xl" icon="solar:camera-bold"></iconify-icon>
+<span>拍照上传</span>
+</button>
+</div>
+<!-- 最近使用预览 -->
+<div class="mt-12">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-bold text-gray-800">最近相册</h3>
+<span class="text-xs text-gray-400">更多库 <iconify-icon icon="solar:alt-arrow-right-linear"></iconify-icon></span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+<img alt="Recent 1" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/7d70722f767b4d939e2daef84095d639.jpg"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+<img alt="Recent 2" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/1b2125a5dfb64187b474135f53895791.jpg"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+<img alt="Recent 3" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/402e2216b4f6446ebfcb773771867ada.jpg"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+<img alt="Recent 4" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/986c8ea5a0274fd7b37389e034a46921.jpg"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100">
+<img alt="Recent 5" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/4ea509c7cbff4f8b9ff71736e3b53ccc.jpg"/>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center border-2 border-gray-100">
+<iconify-icon class="text-gray-300 text-2xl" icon="solar:add-circle-linear"></iconify-icon>
+</div>
+</div>
+</div>
+</div>
+<!-- 提示栏 -->
+<div class="p-6 bg-orange-50 flex items-start space-x-3 rounded-t-3xl border-t border-orange-100">
+<iconify-icon class="text-orange-500 mt-1" icon="solar:info-circle-bold"></iconify-icon>
+<p class="text-[11px] text-orange-700 leading-relaxed">
+                温馨提示：请勿上传涉及侵犯他人版权、隐私或违法违规内容的图片。系统将自动识别并拦截此类处理请求。
+            </p>
+</div>
+</div>
+</body>
+</html>

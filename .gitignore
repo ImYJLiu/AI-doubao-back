@@ -1,0 +1,91 @@
+### IntelliJ IDEA ###
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+.kotlin
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Java / Spring Boot ###
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.jar
+*.war
+*.ear
+*.class
+
+### Maven ###
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+### IDE ###
+.idea/
+*.iml
+*.iws
+
+### Uploads / Local Storage ###
+uploads/
+./uploads
+
+### Logs ###
+*.log
+logs/
+
+### Environment Variables ###
+.env
+.env.local
+.env.*.local
+
+### Database ###
+*.db
+*.sqlite
+*.sqlite3
+
+### Temporary Files ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### Node Modules (小程序如果有) ###
+node_modules/
+
+### WeChat MiniApp ###
+watermark-miniapp/node_modules/
+watermark-miniapp/.wxpack/
+
+### Credentials ###
+*.pem
+*.key
+credentials.json

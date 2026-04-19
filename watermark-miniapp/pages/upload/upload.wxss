@@ -1,0 +1,112 @@
+.container {
+  padding: 32rpx;
+  padding-bottom: 160rpx;
+}
+
+/* 上传区域 */
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: 4rpx dashed #e5e7eb;
+  border-radius: var(--radius-lg);
+  height: 360rpx;
+  margin-top: 32rpx;
+}
+
+.upload-icon {
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
+}
+
+.upload-text {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8rpx;
+}
+
+.upload-tip {
+  font-size: 22rpx;
+  color: #9ca3af;
+}
+
+/* 操作按钮 */
+.actions {
+  margin-top: 40rpx;
+  display: flex;
+  gap: 24rpx;
+}
+
+.btn-album,
+.btn-camera {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  border-radius: var(--radius-md);
+  font-size: 28rpx;
+  font-weight: 500;
+  padding: 24rpx 0;
+}
+
+.btn-album {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-camera {
+  background: var(--color-white);
+  color: var(--color-text);
+  border: 2rpx solid var(--color-border);
+}
+
+/* 最近相册 */
+.recent-section {
+  margin-top: 48rpx;
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 24rpx;
+  display: block;
+}
+
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.recent-img {
+  width: 100%;
+  height: 200rpx;
+  border-radius: var(--radius-sm);
+}
+
+/* 版权提示 */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  background: #fefce8;
+  border-radius: var(--radius-sm);
+  padding: 24rpx;
+  margin-top: 40rpx;
+}
+
+.notice-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+  flex-shrink: 0;
+}
+
+.notice-text {
+  font-size: 22rpx;
+  color: #854d0e;
+  line-height: 1.6;
+}

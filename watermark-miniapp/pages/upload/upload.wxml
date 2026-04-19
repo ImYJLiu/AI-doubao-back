@@ -1,0 +1,42 @@
+<view class="container">
+  <!-- 上传区域 -->
+  <view class="upload-area" bindtap="chooseImage">
+    <text class="upload-icon">☁️</text>
+    <text class="upload-text">点击上传图片</text>
+    <text class="upload-tip">支持 JPG、PNG、WEBP，不超过 10MB</text>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="actions">
+    <button class="btn-album" bindtap="chooseImage">
+      <text>🖼️</text>
+      <text>从相册选择</text>
+    </button>
+    <button class="btn-camera" bindtap="takePhoto">
+      <text>📷</text>
+      <text>拍照上传</text>
+    </button>
+  </view>
+
+  <!-- 最近相册预览 -->
+  <view class="recent-section" wx:if="{{recentImages.length > 0}}">
+    <text class="section-title">最近相册</text>
+    <view class="recent-grid">
+      <image
+        wx:for="{{recentImages}}"
+        wx:key="index"
+        class="recent-img"
+        src="{{item}}"
+        mode="aspectFill"
+        bindtap="selectRecent"
+        data-index="{{index}}"
+      ></image>
+    </view>
+  </view>
+
+  <!-- 版权提示 -->
+  <view class="notice">
+    <text class="notice-icon">⚠️</text>
+    <text class="notice-text">请确保您拥有图片的使用权，禁止上传侵犯他人版权或包含违法内容的图片</text>
+  </view>
+</view>

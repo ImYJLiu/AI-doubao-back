@@ -1,0 +1,6 @@
+<view class="empty">
+  <text class="icon">{{icon || '📁'}}</text>
+  <text class="title">{{title}}</text>
+  <text class="desc" wx:if="{{desc}}">{{desc}}</text>
+  <button class="btn" wx:if="{{showBtn}}" bindtap="onTap">{{btnText || '去试试'}}</button>
+</view>

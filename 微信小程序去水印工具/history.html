@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>作品集 - AI去水印</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f7f7f7; }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-200">
+<div class="w-[375px] h-[812px] bg-white rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-black flex flex-col">
+<!-- 导航栏 -->
+<div class="h-12 flex items-center justify-between px-6 mt-10">
+<h1 class="text-xl font-bold text-gray-800">历史作品</h1>
+<button class="text-sm text-green-600 font-medium">批量管理</button>
+</div>
+<!-- 过滤器 -->
+<div class="px-6 mt-4 flex space-x-4">
+<span class="text-sm font-bold text-green-600 border-b-2 border-green-500 pb-1">全部</span>
+<span class="text-sm text-gray-400">上周</span>
+<span class="text-sm text-gray-400">更早</span>
+</div>
+<!-- 列表内容 -->
+<div class="flex-1 overflow-y-auto px-6 py-4">
+<div class="grid grid-cols-2 gap-4">
+<!-- 记录项 1 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 relative shadow-sm">
+<img alt="Work 1" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/fc263ccee6b5407c9607c4dae1c6b8a9.jpg"/>
+<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<iconify-icon class="text-white text-3xl" icon="solar:eye-bold"></iconify-icon>
+</div>
+</div>
+<div class="mt-2 flex justify-between items-center">
+<span class="text-[10px] text-gray-400">2026-04-10</span>
+<iconify-icon class="text-gray-400 text-lg" icon="solar:download-linear"></iconify-icon>
+</div>
+</div>
+<!-- 记录项 2 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 relative shadow-sm">
+<img alt="Work 2" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/80893089cb2a457a9ea1d984887bc14b.jpg"/>
+</div>
+<div class="mt-2 flex justify-between items-center">
+<span class="text-[10px] text-gray-400">2026-04-09</span>
+<iconify-icon class="text-gray-400 text-lg" icon="solar:download-linear"></iconify-icon>
+</div>
+</div>
+<!-- 记录项 3 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 relative shadow-sm">
+<img alt="Work 3" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/be637c88cbea447e87e71ae84e21428f.jpg"/>
+</div>
+<div class="mt-2 flex justify-between items-center">
+<span class="text-[10px] text-gray-400">2026-04-08</span>
+<iconify-icon class="text-gray-400 text-lg" icon="solar:download-linear"></iconify-icon>
+</div>
+</div>
+<!-- 记录项 4 -->
+<div class="group">
+<div class="aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 relative shadow-sm">
+<img alt="Work 4" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/6b629d7f59b748659a5efbadc9fa2809.jpg"/>
+</div>
+<div class="mt-2 flex justify-between items-center">
+<span class="text-[10px] text-gray-400">2026-04-05</span>
+<iconify-icon class="text-gray-400 text-lg" icon="solar:download-linear"></iconify-icon>
+</div>
+</div>
+</div>
+<!-- 空态展示示例 (如果有则隐藏上面的列表) -->
+<div class="hidden flex-col items-center justify-center py-20 text-center">
+<iconify-icon class="text-6xl text-gray-100" icon="solar:folder-error-bold-duotone"></iconify-icon>
+<p class="text-gray-400 mt-4 text-sm">还没有处理过图片哦</p>
+<a class="mt-4 text-green-500 font-bold text-sm" href="upload.html">去尝试一下吧</a>
+</div>
+</div>
+<!-- 底部导航栏 -->
+<div class="h-20 bg-white/80 backdrop-blur-md border-t border-gray-100 flex items-center justify-around px-4 pb-4 absolute bottom-0 w-full">
+<a class="flex flex-col items-center text-gray-400" href="index.html">
+<iconify-icon class="text-2xl" icon="solar:home-smile-linear"></iconify-icon>
+<span class="text-[10px] mt-1">首页</span>
+</a>
+<a class="flex flex-col items-center text-green-600" href="history.html">
+<iconify-icon class="text-2xl" icon="solar:gallery-bold"></iconify-icon>
+<span class="text-[10px] mt-1 font-bold">作品集</span>
+</a>
+<a class="flex flex-col items-center text-gray-400" href="rewards.html">
+<iconify-icon class="text-2xl" icon="solar:gift-linear"></iconify-icon>
+<span class="text-[10px] mt-1">领次数</span>
+</a>
+</div>
+</div>
+</body>
+</html>

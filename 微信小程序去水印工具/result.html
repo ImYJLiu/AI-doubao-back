@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>处理结果 - AI去水印</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f7f7f7; overflow: hidden; }
+        .comparison-container {
+            position: relative;
+            width: 320px;
+            height: 480px;
+            overflow: hidden;
+            border-radius: 20px;
+        }
+        .comparison-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-cover: cover;
+        }
+        .after-img {
+            clip-path: inset(0 0 0 50%);
+        }
+        .slider-bar {
+            position: absolute;
+            top: 0; bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: white;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        .slider-handle {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px; height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 11;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-200">
+<div class="w-[375px] h-[812px] bg-white rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-black flex flex-col">
+<!-- 导航栏 -->
+<div class="h-12 flex items-center justify-between px-4 mt-10">
+<a class="p-2" href="index.html">
+<iconify-icon class="text-2xl text-gray-800" icon="solar:home-2-bold"></iconify-icon>
+</a>
+<h1 class="font-bold text-gray-800">处理完成</h1>
+<div class="w-10"></div>
+</div>
+<div class="flex-1 flex flex-col items-center justify-center p-6 space-y-8">
+<!-- 对比容器 -->
+<div class="comparison-container shadow-2xl" id="comp-box">
+<!-- 原图 -->
+<img alt="Before" class="comparison-img" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/9e2d9f47e5a442f09983e96e11ecd629.jpg"/>
+<!-- 处理后的图 (这里用占位图模拟，实际会有明显差异) -->
+<div class="after-img absolute inset-0 z-5" id="after-box">
+<img alt="After" class="comparison-img scale-105 contrast-110" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/ffbae1d9391645f1a3d8422a4b475570.jpg" style="filter: brightness(1.05);"/>
+</div>
+<!-- 滑块 -->
+<div class="slider-bar" id="slider-bar">
+<div class="slider-handle">
+<iconify-icon class="text-green-500 text-xl" icon="solar:transfer-horizontal-bold"></iconify-icon>
+</div>
+</div>
+<!-- 标签 -->
+<span class="absolute top-4 left-4 bg-black/40 text-white text-[10px] px-2 py-1 rounded-full z-20">原图</span>
+<span class="absolute top-4 right-4 bg-green-500/80 text-white text-[10px] px-2 py-1 rounded-full z-20">AI 修复</span>
+</div>
+<p class="text-gray-400 text-xs italic">提示：左右拖动滑块查看对比效果</p>
+<!-- 操作按钮 -->
+<div class="w-full grid grid-cols-2 gap-4">
+<button class="py-4 bg-gray-100 text-gray-800 rounded-2xl font-bold flex items-center justify-center space-x-2" onclick="alert('已保存至系统相册')">
+<iconify-icon class="text-xl" icon="solar:download-square-bold"></iconify-icon>
+<span>保存相册</span>
+</button>
+<button class="py-4 bg-green-500 text-white rounded-2xl font-bold flex items-center justify-center space-x-2 shadow-lg shadow-green-100" onclick="alert('模拟调起微信分享')">
+<iconify-icon class="text-xl" icon="solar:share-bold"></iconify-icon>
+<span>分享好友</span>
+</button>
+</div>
+<a class="text-green-600 font-bold text-sm" href="upload.html">继续处理下一张</a>
+</div>
+<!-- 底部反馈 -->
+<div class="px-8 pb-12 flex justify-center items-center space-x-2">
+<span class="text-gray-400 text-xs">修复效果满意吗？</span>
+<div class="flex space-x-2">
+<iconify-icon class="text-2xl text-yellow-400 cursor-pointer" icon="solar:smile-circle-bold"></iconify-icon>
+<iconify-icon class="text-2xl text-gray-200 cursor-pointer" icon="solar:sad-circle-bold"></iconify-icon>
+</div>
+</div>
+</div>
+<script>
+        const container = document.getElementById('comp-box');
+        const afterBox = document.getElementById('after-box');
+        const sliderBar = document.getElementById('slider-bar');
+
+        const move = (e) => {
+            const x = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+            const rect = container.getBoundingClientRect();
+            let position = ((x - rect.left) / rect.width) * 100;
+            
+            if (position < 0) position = 0;
+            if (position > 100) position = 100;
+
+            afterBox.style.clipPath = `inset(0 0 0 ${position}%)`;
+            sliderBar.style.left = `${position}%`;
+        };
+
+        container.addEventListener('mousemove', move);
+        container.addEventListener('touchmove', (e) => {
+            move(e);
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

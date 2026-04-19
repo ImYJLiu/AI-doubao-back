@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>任务中心 - AI去水印</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f7f7f7; }
+        .reward-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fffb 100%);
+        }
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-subtle {
+            animation: bounce-subtle 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-200">
+<div class="w-[375px] h-[812px] bg-white rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-black flex flex-col">
+<!-- 装饰背景 -->
+<div class="absolute top-0 left-0 right-0 h-48 bg-green-500 -z-10 rounded-b-[40px]"></div>
+<div class="h-12 flex items-center px-4 mt-10">
+<a class="p-2 text-white" href="index.html">
+<iconify-icon class="text-2xl" icon="solar:alt-arrow-left-linear"></iconify-icon>
+</a>
+<h1 class="flex-1 text-center font-bold text-white pr-8">任务中心</h1>
+</div>
+<div class="px-6 flex-1 overflow-y-auto">
+<!-- 剩余次数展示 -->
+<div class="bg-white rounded-3xl p-6 shadow-xl mt-4 flex flex-col items-center border border-green-50">
+<span class="text-gray-400 text-xs">当前剩余次数</span>
+<div class="flex items-baseline mt-2">
+<span class="text-5xl font-black text-green-500" id="display-count">3</span>
+<span class="text-gray-400 ml-2 text-sm font-medium">次</span>
+</div>
+<div class="w-full h-1.5 bg-gray-100 rounded-full mt-6 overflow-hidden">
+<div class="h-full bg-green-500 w-1/3 rounded-full"></div>
+</div>
+<p class="text-[10px] text-gray-400 mt-2 italic">每日零点自动恢复至 3 次</p>
+</div>
+<!-- 任务列表 -->
+<div class="mt-8 space-y-4">
+<h3 class="font-bold text-gray-800">获取更多次数</h3>
+<!-- 任务 1 -->
+<div class="reward-card p-4 rounded-2xl border border-green-100 flex items-center shadow-sm">
+<div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center animate-bounce-subtle">
+<iconify-icon class="text-2xl text-orange-500" icon="solar:video-library-bold"></iconify-icon>
+</div>
+<div class="ml-4 flex-1">
+<h4 class="font-bold text-gray-800 text-sm">观看激励视频</h4>
+<p class="text-[10px] text-gray-500">完整观看广告即领 +3 次</p>
+</div>
+<button class="px-4 py-1.5 bg-green-500 text-white rounded-full text-xs font-bold active:scale-95 transition-transform" id="ad-btn" onclick="watchAd()">
+                        去完成
+                    </button>
+</div>
+<!-- 任务 2 -->
+<div class="reward-card p-4 rounded-2xl border border-green-100 flex items-center shadow-sm">
+<div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl text-blue-500" icon="solar:share-circle-bold"></iconify-icon>
+</div>
+<div class="ml-4 flex-1">
+<h4 class="font-bold text-gray-800 text-sm">分享给好友</h4>
+<p class="text-[10px] text-gray-500">邀请新用户可领 +2 次</p>
+</div>
+<button class="px-4 py-1.5 bg-white border border-green-500 text-green-600 rounded-full text-xs font-bold active:scale-95 transition-transform" id="share-btn" onclick="shareTask()">
+                        去分享
+                    </button>
+</div>
+<!-- 任务 3 (会员/付费模拟) -->
+<div class="p-4 rounded-2xl bg-gray-900 flex items-center shadow-lg relative overflow-hidden">
+<div class="absolute top-0 right-0 bg-yellow-400 text-[8px] font-bold px-3 py-1 rounded-bl-xl uppercase tracking-tighter">Recommended</div>
+<div class="w-12 h-12 bg-yellow-400/20 rounded-full flex items-center justify-center">
+<iconify-icon class="text-2xl text-yellow-400" icon="solar:crown-bold"></iconify-icon>
+</div>
+<div class="ml-4 flex-1">
+<h4 class="font-bold text-white text-sm">无限次数特权</h4>
+<p class="text-[10px] text-gray-400">解锁尊贵身份，免除广告</p>
+</div>
+<button class="px-4 py-1.5 bg-yellow-400 text-gray-900 rounded-full text-xs font-black">
+                        ￥9.9/月
+                    </button>
+</div>
+</div>
+</div>
+<!-- 模拟广告弹窗 -->
+<div class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-8 hidden" id="ad-overlay">
+<div class="absolute top-10 right-8 flex items-center space-x-2 text-white">
+<span class="text-sm font-mono" id="ad-timer">15s</span>
+<span class="text-xs opacity-50">后可关闭</span>
+</div>
+<div class="w-full aspect-video bg-gray-800 rounded-xl flex items-center justify-center mb-8 overflow-hidden">
+<img alt="Ad Video" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/f490d2dd8db04c8e91eb92189422ac58.jpg"/>
+</div>
+<p class="text-white font-bold text-center">正在加载精彩广告内容...</p>
+<div class="mt-8 px-8 py-3 bg-white/10 rounded-full border border-white/20 text-white/50 text-xs">
+                广告结束后自动发放奖励
+            </div>
+</div>
+<!-- 底部导航栏 -->
+<div class="h-20 bg-white/80 backdrop-blur-md border-t border-gray-100 flex items-center justify-around px-4 pb-4 absolute bottom-0 w-full">
+<a class="flex flex-col items-center text-gray-400" href="index.html">
+<iconify-icon class="text-2xl" icon="solar:home-smile-linear"></iconify-icon>
+<span class="text-[10px] mt-1">首页</span>
+</a>
+<a class="flex flex-col items-center text-gray-400" href="history.html">
+<iconify-icon class="text-2xl" icon="solar:gallery-linear"></iconify-icon>
+<span class="text-[10px] mt-1">作品集</span>
+</a>
+<a class="flex flex-col items-center text-green-600" href="rewards.html">
+<iconify-icon class="text-2xl" icon="solar:gift-bold"></iconify-icon>
+<span class="text-[10px] mt-1 font-bold">领次数</span>
+</a>
+</div>
+</div>
+<script>
+        function updateDisplay() {
+            const credits = localStorage.getItem('watermark_credits') || "3";
+            document.getElementById('display-count').innerText = credits;
+        }
+
+        function watchAd() {
+            const overlay = document.getElementById('ad-overlay');
+            const timerSpan = document.getElementById('ad-timer');
+            overlay.classList.remove('hidden');
+            
+            let timeLeft = 15;
+            const timer = setInterval(() => {
+                timeLeft--;
+                timerSpan.innerText = timeLeft + 's';
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    finishAd();
+                }
+            }, 1000);
+        }
+
+        function finishAd() {
+            document.getElementById('ad-overlay').classList.add('hidden');
+            let credits = parseInt(localStorage.getItem('watermark_credits') || "3");
+            credits += 3;
+            localStorage.setItem('watermark_credits', credits.toString());
+            updateDisplay();
+            alert('恭喜！获得奖励 3 次使用机会');
+        }
+
+        function shareTask() {
+            if (confirm('模拟分享到微信群成功？')) {
+                let credits = parseInt(localStorage.getItem('watermark_credits') || "3");
+                credits += 2;
+                localStorage.setItem('watermark_credits', credits.toString());
+                updateDisplay();
+                alert('分享成功！获得奖励 2 次使用机会');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', updateDisplay);
+    </script>
+</body>
+</html>

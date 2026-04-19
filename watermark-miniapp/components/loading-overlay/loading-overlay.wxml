@@ -1,0 +1,7 @@
+<view class="overlay" wx:if="{{show}}" catchtouchmove="true">
+  <view class="content">
+    <view class="spinner"></view>
+    <text class="title">{{title || '处理中...'}}</text>
+    <text class="desc" wx:if="{{desc}}">{{desc}}</text>
+  </view>
+</view>

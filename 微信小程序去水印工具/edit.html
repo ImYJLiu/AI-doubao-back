@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>去水印编辑 - AI助手</title>
+<script src="https://modao.cc/agent-py/static/source/js/tailwindcss.3.4.3.js"></script>
+<script src="https://modao.cc/agent-py/static/source/js/iconify-icon.min.1.0.7.js"></script>
+<style>
+        body { font-family: 'PingFang SC', sans-serif; background-color: #f7f7f7; overflow: hidden; }
+        #canvas-container { position: relative; touch-action: none; }
+        canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
+        .brush-cursor { 
+            pointer-events: none; 
+            position: fixed; 
+            border: 2px solid white; 
+            border-radius: 50%; 
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center h-screen bg-gray-200">
+<div class="w-[375px] h-[812px] bg-[#1a1a1a] rounded-[40px] shadow-2xl overflow-hidden relative border-[8px] border-black flex flex-col">
+<!-- 顶部工具栏 -->
+<div class="h-12 flex items-center justify-between px-4 mt-10 z-10">
+<a class="p-2 bg-white/10 rounded-full" href="upload.html">
+<iconify-icon class="text-2xl text-white" icon="solar:close-circle-bold"></iconify-icon>
+</a>
+<div class="flex space-x-2">
+<button class="p-2 bg-white/10 rounded-full text-white disabled:opacity-30" id="undo-btn">
+<iconify-icon class="text-xl" icon="solar:undo-left-round-bold"></iconify-icon>
+</button>
+<button class="p-2 bg-white/10 rounded-full text-white disabled:opacity-30" id="redo-btn">
+<iconify-icon class="text-xl" icon="solar:undo-right-round-bold"></iconify-icon>
+</button>
+</div>
+<button class="px-5 py-1.5 bg-green-500 text-white rounded-full text-sm font-bold shadow-lg shadow-green-900/50" id="process-btn">
+                处理图片
+            </button>
+</div>
+<!-- 画布编辑区 -->
+<div class="flex-1 flex items-center justify-center overflow-hidden bg-black/50 m-4 rounded-3xl relative" id="canvas-wrapper">
+<div class="w-[300px] h-[450px]" id="canvas-container">
+<img alt="Source" class="w-full h-full object-cover rounded-sm" id="source-img" src="https://modao.cc/agent-py/media/generated_images/2026-04-11/b4d3b2f043c444eabd68be70c39c909f.jpg"/>
+<canvas height="450" id="mask-canvas" width="300"></canvas>
+</div>
+<!-- 引导文字 -->
+<div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+<span class="bg-black/60 text-white/80 text-[10px] px-3 py-1 rounded-full">涂抹需要去除的区域，如 "XXAI生成"</span>
+</div>
+</div>
+<!-- 底部控制栏 -->
+<div class="bg-[#2a2a2a] p-6 rounded-t-[40px] space-y-6">
+<!-- 笔刷粗细调节 -->
+<div class="flex items-center space-x-4">
+<iconify-icon class="text-gray-400" icon="solar:pen-2-bold"></iconify-icon>
+<input class="flex-1 accent-green-500" id="brush-size" max="50" min="5" type="range" value="20"/>
+<span class="text-white text-xs w-8" id="size-val">20</span>
+</div>
+<!-- 工具切换 -->
+<div class="flex justify-around items-center">
+<button class="flex flex-col items-center space-y-1 text-green-500">
+<iconify-icon class="text-3xl" icon="solar:brush-bold"></iconify-icon>
+<span class="text-[10px]">画笔</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-gray-500 opacity-50" onclick="alert('即将上线')">
+<iconify-icon class="text-3xl" icon="solar:eraser-bold"></iconify-icon>
+<span class="text-[10px]">擦除</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-gray-500 opacity-50" onclick="alert('即将上线')">
+<iconify-icon class="text-3xl" icon="solar:magnifer-zoom-in-bold"></iconify-icon>
+<span class="text-[10px]">缩放</span>
+</button>
+<button class="flex flex-col items-center space-y-1 text-gray-500 opacity-50" onclick="alert('即将上线')">
+<iconify-icon class="text-3xl" icon="solar:mask-bold"></iconify-icon>
+<span class="text-[10px]">套索</span>
+</button>
+</div>
+</div>
+<div class="brush-cursor" id="brush-cursor"></div>
+</div>
+<script>
+        const canvas = document.getElementById('mask-canvas');
+        const ctx = canvas.getContext('2d');
+        const brushSizeInput = document.getElementById('brush-size');
+        const sizeValSpan = document.getElementById('size-val');
+        const brushCursor = document.getElementById('brush-cursor');
+        const processBtn = document.getElementById('process-btn');
+
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let brushSize = 20;
+
+        // 设置画笔样式
+        ctx.strokeStyle = 'rgba(74, 222, 128, 0.6)'; // 浅绿色半透明
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.lineWidth = brushSize;
+
+        function updateBrushSize() {
+            brushSize = brushSizeInput.value;
+            sizeValSpan.innerText = brushSize;
+            ctx.lineWidth = brushSize;
+            brushCursor.style.width = brushSize + 'px';
+            brushCursor.style.height = brushSize + 'px';
+        }
+
+        brushSizeInput.oninput = updateBrushSize;
+
+        // 绘图逻辑
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            startDrawing({offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top});
+            e.preventDefault();
+        });
+        canvas.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            draw({offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top});
+            e.preventDefault();
+        });
+
+        function startDrawing(e) {
+            isDrawing = true;
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+            draw(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // 处理逻辑
+        processBtn.onclick = () => {
+            let credits = parseInt(localStorage.getItem('watermark_credits') || "3");
+            
+            if (credits <= 0) {
+                if (confirm('次数已耗尽，前往任务中心获取更多次数？')) {
+                    window.location.href = 'rewards.html';
+                }
+                return;
+            }
+
+            processBtn.innerHTML = '<iconify-icon icon="line-md:loading-twotone-loop"></iconify-icon> 处理中...';
+            processBtn.disabled = true;
+
+            // 模拟算法处理延迟
+            setTimeout(() => {
+                credits -= 1;
+                localStorage.setItem('watermark_credits', credits.toString());
+                window.location.href = 'result.html';
+            }, 2500);
+        };
+
+        updateBrushSize();
+    </script>
+</body>
+</html>

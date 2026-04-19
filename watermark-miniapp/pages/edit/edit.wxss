@@ -1,0 +1,164 @@
+.edit-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #1a1a1a;
+}
+
+/* 顶部工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 32rpx;
+  padding-top: 60rpx;
+  background: #2a2a2a;
+}
+
+.tool-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #3a3a3a;
+}
+
+.tool-btn.disabled {
+  opacity: 0.3;
+}
+
+.tool-icon {
+  font-size: 32rpx;
+  color: #ffffff;
+}
+
+.tool-group {
+  display: flex;
+  gap: 16rpx;
+}
+
+.process-btn {
+  background: var(--color-primary);
+  color: var(--color-white);
+  padding: 12rpx 32rpx;
+  border-radius: var(--radius-sm);
+  font-size: 26rpx;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.process-btn.disabled {
+  opacity: 0.6;
+  background: #3a3a3a;
+}
+
+.process-btn.confirm {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  font-weight: bold;
+  animation: pulse 2s infinite;
+}
+
+.process-btn.loading {
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* 画布区域 */
+.canvas-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.source-image {
+  width: 100%;
+  height: 100%;
+}
+
+.mask-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+}
+
+/* 底部控制栏 */
+.controls {
+  background: #2a2a2a;
+  padding: 24rpx 32rpx;
+  padding-bottom: 80rpx;
+}
+
+.tools {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 32rpx;
+}
+
+.tool-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  border-radius: var(--radius-sm);
+  background: #3a3a3a;
+}
+
+.tool-item.active {
+  background: var(--color-primary);
+}
+
+.tool-item.disabled {
+  opacity: 0.5;
+}
+
+.tool-emoji {
+  font-size: 36rpx;
+  margin-bottom: 6rpx;
+}
+
+.tool-name {
+  font-size: 20rpx;
+  color: var(--color-white);
+}
+
+/* 笔刷大小 */
+.brush-size {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.size-label {
+  font-size: 24rpx;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.size-slider {
+  flex: 1;
+}
+
+.size-value {
+  font-size: 24rpx;
+  color: var(--color-primary);
+  width: 80rpx;
+  text-align: right;
+  flex-shrink: 0;
+}

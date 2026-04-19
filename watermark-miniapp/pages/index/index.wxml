@@ -1,0 +1,46 @@
+<view class="container">
+  <!-- 头部 -->
+  <view class="header">
+    <view>
+      <text class="title">AI去水印助手</text>
+      <text class="subtitle">2026年度最受欢迎图像工具</text>
+    </view>
+    <view class="credit-badge">
+      <text class="badge-icon">⭐</text>
+      <text class="badge-text">剩余 {{credits}} 次</text>
+    </view>
+  </view>
+
+  <!-- Banner -->
+  <view class="banner">
+    <image class="banner-bg" src="/images/banner-placeholder.png" mode="aspectFill"></image>
+    <view class="banner-overlay">
+      <text class="banner-title">智能擦除，不留痕迹</text>
+      <text class="banner-desc">采用 XXAI 2.0 修复算法，完美还原背景</text>
+    </view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="features">
+    <view class="feature-item" bindtap="goToUpload">
+      <view class="feature-icon green">
+        <text>📷</text>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">一键去水印</text>
+        <text class="feature-desc">支持涂抹、框选，毫秒级修复</text>
+      </view>
+      <text class="feature-arrow">›</text>
+    </view>
+    <view class="feature-item disabled">
+      <view class="feature-icon blue">
+        <text>🎬</text>
+      </view>
+      <view class="feature-info">
+        <text class="feature-title">短视频去水印</text>
+        <text class="feature-desc">即将上线，敬请期待</text>
+      </view>
+      <text class="tag-dev">开发中</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,29 @@
+<view class="comparer" style="height: {{height}}rpx;">
+  <!-- 原图 (底层) -->
+  <image class="img-before" src="{{beforeSrc}}" mode="aspectFill"></image>
+  <!-- 处理后图 (上层，动态裁切) -->
+  <view class="img-after-wrapper" style="width: {{percent}}%; height: 100%;">
+    <image class="img-after" src="{{afterSrc}}" mode="aspectFill"></image>
+  </view>
+  <!-- 滑块 -->
+  <movable-area class="slider-area">
+    <movable-view
+      class="slider-bar"
+      direction="horizontal"
+      x="{{sliderX}}"
+      y="0"
+      disabled="{{false}}"
+      bindchange="onSliderChange"
+      bindtouchend="onSliderEnd"
+    >
+      <view class="slider-line"></view>
+      <view class="slider-handle">
+        <text class="arrow left">◀</text>
+        <text class="arrow right">▶</text>
+      </view>
+    </movable-view>
+  </movable-area>
+  <!-- 标签 -->
+  <view class="label label-before">原图</view>
+  <view class="label label-after">处理后</view>
+</view>

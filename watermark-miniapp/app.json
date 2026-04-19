@@ -1,0 +1,45 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/upload/upload",
+    "pages/edit/edit",
+    "pages/result/result",
+    "pages/history/history",
+    "pages/rewards/rewards"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTitleText": "AI去水印助手",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f7f7"
+  },
+  "tabBar": {
+    "color": "#9ca3af",
+    "selectedColor": "#22c55e",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/tab-home.png",
+        "selectedIconPath": "images/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "作品集",
+        "iconPath": "images/tab-gallery.png",
+        "selectedIconPath": "images/tab-gallery-active.png"
+      },
+      {
+        "pagePath": "pages/rewards/rewards",
+        "text": "领次数",
+        "iconPath": "images/tab-gift.png",
+        "selectedIconPath": "images/tab-gift-active.png"
+      }
+    ]
+  },
+  "requiredPrivateInfos": [],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

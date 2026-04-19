@@ -1,0 +1,63 @@
+<view class="container">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">AI正在处理中，请稍候...</text>
+    <text class="loading-time">已等待 {{waitTime}}秒</text>
+  </view>
+
+  <!-- 处理完成 -->
+  <view wx:else>
+    <!-- 对比滑块 -->
+    <view class="comparer-wrapper">
+      <image-comparer
+        beforeSrc="{{imageUrl}}"
+        afterSrc="{{resultUrl}}"
+        height="700"
+      ></image-comparer>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="actions">
+      <button class="btn-save" bindtap="saveToAlbum">
+        <text>💾</text>
+        <text>保存到相册</text>
+      </button>
+      <button class="btn-share" open-type="share" bindtap="onShareButtonClick">
+        <text>📤</text>
+        <text>分享好友</text>
+      </button>
+    </view>
+
+    <!-- 反馈 -->
+    <view class="feedback">
+      <text class="feedback-title">修复效果如何？</text>
+      <view class="feedback-options">
+        <view
+          class="feedback-item {{feedback === 'satisfied' ? 'selected' : ''}}"
+          bindtap="submitFeedback"
+          data-rating="satisfied"
+        >
+          <text class="feedback-emoji">😊</text>
+          <text class="feedback-text">满意</text>
+        </view>
+        <view
+          class="feedback-item {{feedback === 'unsatisfied' ? 'selected' : ''}}"
+          bindtap="submitFeedback"
+          data-rating="unsatisfied"
+        >
+          <text class="feedback-emoji">😞</text>
+          <text class="feedback-text">不满意</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 继续处理 -->
+    <view class="continue">
+      <text class="continue-link" bindtap="goToUpload">继续处理下一张 ›</text>
+    </view>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <loading-overlay show="{{processing}}" title="保存中..."></loading-overlay>
+</view>

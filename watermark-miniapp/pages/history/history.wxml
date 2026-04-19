@@ -1,0 +1,66 @@
+<view class="container">
+  <!-- 顶部操作 -->
+  <view class="header">
+    <text class="title">历史作品</text>
+    <text class="manage-btn" bindtap="toggleBatch">{{batchMode ? '取消' : '批量管理'}}</text>
+  </view>
+
+  <!-- 过滤器 -->
+  <view class="filters">
+    <view
+      wx:for="{{['全部', '上周', '更早']}}"
+      wx:key="index"
+      class="filter-tag {{filterIndex === index ? 'active' : ''}}"
+      bindtap="switchFilter"
+      data-index="{{index}}"
+    >
+      {{item}}
+    </view>
+  </view>
+
+  <!-- 内容区 -->
+  <view wx:if="{{historyList.length > 0}}" class="grid">
+    <view
+      wx:for="{{historyList}}"
+      wx:key="taskId"
+      class="grid-item {{batchMode && selectedItems[item.taskId] ? 'selected' : ''}}"
+      bindtap="onItemClick"
+      data-id="{{item.taskId}}"
+    >
+      <image class="item-img" src="{{item.thumbUrl}}" mode="aspectFill"></image>
+      <view class="item-info">
+        <text class="item-date">{{item.createdAt}}</text>
+        <view class="item-actions" wx:if="{{!batchMode}}">
+          <text class="action-btn" bindtap="downloadItem" data-url="{{item.resultUrl}}">⬇️</text>
+        </view>
+        <view class="item-checkbox" wx:if="{{batchMode}}">
+          <text class="checkbox {{selectedItems[item.taskId] ? 'checked' : ''}}">
+            {{selectedItems[item.taskId] ? '✓' : ''}}
+          </text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空态 -->
+  <empty-state
+    wx:else
+    icon="📁"
+    title="还没有处理过图片哦"
+    desc="去试试吧，AI去水印超好用"
+    showBtn="{{true}}"
+    btnText="去试试"
+    bind:tap="goToUpload"
+  ></empty-state>
+
+  <!-- 批量操作底部栏 -->
+  <view class="batch-bar" wx:if="{{batchMode}}">
+    <view class="select-all" bindtap="selectAll">
+      <text class="checkbox {{allSelected ? 'checked' : ''}}">{{allSelected ? '✓' : ''}}</text>
+      <text>全选</text>
+    </view>
+    <button class="btn-delete" bindtap="batchDelete" disabled="{{selectedCount === 0}}">
+      删除({{selectedCount}})
+    </button>
+  </view>
+</view>

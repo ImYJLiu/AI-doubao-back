@@ -1,0 +1,69 @@
+<view class="page">
+  <!-- 顶部绿色区域 -->
+  <view class="header-bg">
+    <view class="header-content">
+      <text class="title">任务中心</text>
+      <view class="credit-card">
+        <text class="credit-num">{{credits}}</text>
+        <text class="credit-label">剩余次数</text>
+        <view class="credit-bar">
+          <view class="credit-bar-fill" style="width: {{barPercent}}%"></view>
+        </view>
+        <text class="credit-tip">每日零点自动恢复至 3 次</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 任务列表 -->
+  <view class="tasks">
+    <!-- 观看广告 -->
+    <view class="task-card">
+      <view class="task-icon orange">
+        <text>▶️</text>
+      </view>
+      <view class="task-info">
+        <text class="task-title">观看激励视频</text>
+        <text class="task-desc">完整观看广告即领 +3 次</text>
+      </view>
+      <button class="task-btn green" bindtap="watchAd">
+        {{adWatching ? '观看中...' : '去完成'}}
+      </button>
+    </view>
+
+    <!-- 分享好友 -->
+    <view class="task-card">
+      <view class="task-icon blue">
+        <text>📤</text>
+      </view>
+      <view class="task-info">
+        <text class="task-title">分享给好友</text>
+        <text class="task-desc">邀请新用户可领 +2 次</text>
+      </view>
+      <button class="task-btn white" bindtap="shareTask">去分享</button>
+    </view>
+
+    <!-- VIP -->
+    <view class="task-card vip-card">
+      <view class="task-icon gold">
+        <text>👑</text>
+      </view>
+      <view class="task-info">
+        <text class="task-title vip-title">无限次数特权</text>
+        <text class="task-desc vip-desc">VIP会员，畅享无限次去水印</text>
+        <text class="vip-tag">Recommended</text>
+      </view>
+      <view class="task-btn vip">
+        <text class="vip-price">¥9.9/月</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 广告播放遮罩 -->
+  <view class="ad-overlay" wx:if="{{adWatching}}" catchtouchmove="true">
+    <view class="ad-content">
+      <text class="ad-tip">广告播放中...</text>
+      <text class="ad-countdown">剩余 {{adCountdown}}秒</text>
+      <text class="ad-hint">完整观看即可获得 +3 次</text>
+    </view>
+  </view>
+</view>
