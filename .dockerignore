@@ -1,0 +1,7 @@
+target/
+uploads/
+watermark-miniapp/
+*.log
+*.pid
+*.md
+.git/

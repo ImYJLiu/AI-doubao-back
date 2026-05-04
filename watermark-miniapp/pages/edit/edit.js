@@ -18,6 +18,7 @@ Page({
     previewTaskId: null,
     previewStatus: '',
     previewResultUrl: '',
+    previewLoaded: false,
     isPreviewing: false,
     // 按钮状态
     processBtnText: '请先涂抹水印区域',
@@ -32,20 +33,48 @@ Page({
   lastY: 0,
   debounceTimer: null,
 
-  // 撤销重做：直接存储对象引用（不 JSON 序列化）
+  // 画布笔画级撤销重做（涂抹过程中使用）
   undoStack: [],
   redoStack: [],
   currentStroke: null,
 
+  // 结果图级撤销重做（预览成功后使用，存储状态快照）
+  resultUndoStack: [],
+  resultRedoStack: [],
+
   imageWidth: 0,
   imageHeight: 0,
 
+  // 下一轮底图上传 Promise（预览成功后异步上传结果图，下一轮涂抹基于该结果）
+  _baseImageUploadPromise: null,
+
+  // 服务器URL→本地文件路径缓存（iOS不支持HTTP图片渲染，必须用本地文件显示）
+  _localPathCache: {},
+
   onLoad(options) {
+    const imageId = options.imageId || '';
+    const imageUrl = options.imageUrl ? decodeURIComponent(options.imageUrl) : decodeURIComponent(options.imagePath || '');
     this.setData({
-      imageId: options.imageId || '',
+      imageId,
       imagePath: decodeURIComponent(options.imagePath || ''),
-      imageUrl: options.imageUrl ? decodeURIComponent(options.imageUrl) : decodeURIComponent(options.imagePath || '')
+      imageUrl
     });
+    // 保存初始状态快照（原图），用于结果图级撤销的基点
+    this._initialState = { imageId, imageUrl, previewResultUrl: '' };
+    // 进入编辑页时同步最新积分
+    this.syncCredits();
+  },
+
+  async syncCredits() {
+    try {
+      const res = await api.getCreditsInfo();
+      if (res.code === 0) {
+        const app = getApp();
+        app.globalData.credits = res.data.credits || 0;
+      }
+    } catch (e) {
+      // 忽略，使用本地缓存的值
+    }
   },
 
   async onReady() {
@@ -61,25 +90,10 @@ Page({
       console.log('Canvas 位置:', rect);
     }).exec();
 
-    // 初始化灰色蒙版（覆盖整个画布）
-    this.initGrayMask();
+    // 画布保持透明，涂抹时直接绘制深紫色画笔
   },
 
-  /**
-   * 初始化灰色蒙版层（覆盖整个画布）
-   */
-  initGrayMask() {
-    if (!this.ctx) return;
-    
-    const w = this.data.canvasW;
-    const h = this.data.canvasH;
-    
-    // 填充整个画布为灰色半透明
-    this.ctx.fillStyle = 'rgba(128, 128, 128, 0.5)';
-    this.ctx.fillRect(0, 0, w, h);
-    
-    console.log('灰色蒙版已初始化，画布尺寸:', w, h);
-  },
+
 
   onImageLoad(e) {
     this.imageWidth = e.detail.width;
@@ -105,6 +119,20 @@ Page({
       h: this.imageDisplayHeight
     });
     
+  },
+
+  /**
+   * 预览结果图加载完成，淡入显示
+   */
+  onPreviewImageLoad() {
+    this.setData({ previewLoaded: true });
+  },
+
+  /**
+   * 图片加载失败（排查iOS不渲染问题）
+   */
+  onImageError(e) {
+    console.error('图片加载失败:', e.detail);
   },
 
   // ====== 工具 & 笔刷 ======
@@ -139,16 +167,27 @@ Page({
       text = '确认保存';
       cls = 'confirm';
     } else if (hasStrokes) {
-      text = '涂抹完成，等待预览';
-      cls = '';
+      text = '预览生成中...';
+      cls = 'loading';
+    }
+
+    // 撤销/重做模式：结果图栈有内容时走结果图级，否则走笔画级
+    const hasResultHistory = this.resultUndoStack.length > 0 || this.resultRedoStack.length > 0;
+    let canUndo, canRedo;
+    if (hasResultHistory) {
+      canUndo = this.resultUndoStack.length > 0 && !processing && !isPreviewing;
+      canRedo = this.resultRedoStack.length > 0 && !processing && !isPreviewing;
+    } else {
+      canUndo = hasStrokes && !processing && !isPreviewing;
+      canRedo = this.redoStack.length > 0 && !processing && !isPreviewing;
     }
 
     this.setData({
       processBtnText: text,
       processBtnClass: cls,
-      canUndo: hasStrokes && !processing && !isPreviewing,
-      canRedo: this.redoStack.length > 0 && !processing && !isPreviewing,
-      canClear: hasStrokes && !processing && !isPreviewing
+      canUndo,
+      canRedo,
+      canClear: (hasStrokes || previewSuccess) && !processing && !isPreviewing
     });
   },
 
@@ -163,9 +202,18 @@ Page({
       this.debounceTimer = null;
     }
 
-    // 如果正在预览，取消状态
+    // 预览成功后用户继续涂抹：保留结果图，仅重置预览状态
     if (this.data.isPreviewing) {
-      this.setData({ isPreviewing: false });
+      this.setData({ isPreviewing: false, previewTaskId: null });
+      this.updateBtnState();
+    }
+    if (this.data.previewStatus === 'SUCCESS') {
+      // 不重置 previewResultUrl，结果图保持可见
+      this.setData({ previewStatus: '', previewLoaded: false, previewTaskId: null });
+      // 开始新涂抹，旧的结果图重做路径作废，笔画栈清零
+      this.resultRedoStack = [];
+      this.undoStack = [];
+      this.redoStack = [];
       this.updateBtnState();
     }
 
@@ -180,12 +228,13 @@ Page({
     // 清空重做栈
     this.redoStack = [];
 
-    // 用 destination-out 擦除灰色蒙版，使涂抹区域变透明
-    this.ctx.globalCompositeOperation = 'destination-out';
+    // 用深紫色画笔涂抹水印区域
+    this.ctx.globalCompositeOperation = 'source-over';
     this.ctx.lineCap = 'round';
     this.ctx.lineJoin = 'round';
     this.ctx.lineWidth = this.data.brushSize;
-    this.ctx.strokeStyle = 'rgba(255,255,255,1)';
+    this.ctx.strokeStyle = 'rgba(126, 34, 206, 0.5)';
+    this.ctx.fillStyle = 'rgba(126, 34, 206, 0.5)';
 
     // 画一个点（处理单击不拖动的情况）
     this.ctx.beginPath();
@@ -224,7 +273,7 @@ Page({
     }
     this.debounceTimer = setTimeout(() => {
       this.triggerPreview();
-    }, 1500);
+    }, 300);
   },
 
   // ====== 撤销 / 重做 / 清空 ======
@@ -247,49 +296,169 @@ Page({
   },
 
   onUndo() {
-    if (this.undoStack.length === 0 || this.data.processing || this.data.isPreviewing) return;
+    if (this.data.processing || this.data.isPreviewing) return;
 
-    // 保存当前状态到重做栈
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-    const currentState = this.ctx.getImageData(0, 0, w, h);
-    this.redoStack.push(currentState);
+    // 结果图栈有内容时走结果图级，否则走笔画级
+    const hasResultHistory = this.resultUndoStack.length > 0 || this.resultRedoStack.length > 0;
 
-    // 恢复上一个状态
-    const prevState = this.undoStack.pop();
-    this.restoreCanvasState(prevState);
-
-    this.updateBtnState();
+    if (hasResultHistory) {
+      // 结果图级撤销：回到上一轮结果图（或原图）
+      if (this.resultUndoStack.length === 0) return;
+      // 保存当前结果状态到重做栈
+      this.resultRedoStack.push({
+        imageId: this.data.imageId,
+        imageUrl: this.data.imageUrl,
+        previewResultUrl: this.data.previewResultUrl,
+        imagePath: this.data.imagePath,
+        previewTaskId: this.data.previewTaskId
+      });
+      const prevState = this.resultUndoStack.pop();
+      // 恢复上一个结果状态
+      this.ctx.clearRect(0, 0, this.data.canvasW, this.data.canvasH);
+      this.undoStack = [];
+      this.redoStack = [];
+      const localResultUrl = prevState.previewResultUrl && this._localPathCache[prevState.previewResultUrl]
+        ? this._localPathCache[prevState.previewResultUrl]
+        : prevState.previewResultUrl;
+      this.setData({
+        imageId: prevState.imageId,
+        imageUrl: prevState.imageUrl,
+        imagePath: prevState.imagePath,
+        previewResultUrl: localResultUrl,
+        previewStatus: prevState.previewResultUrl ? 'SUCCESS' : '',
+        previewLoaded: !!prevState.previewResultUrl,
+        previewTaskId: prevState.previewTaskId || null
+      });
+      this.updateBtnState();
+      console.log('结果图撤销, 回到:', prevState.previewResultUrl || '原图');
+    } else {
+      // 画布笔画级撤销
+      if (this.undoStack.length === 0) return;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      const currentState = this.ctx.getImageData(0, 0, w, h);
+      this.redoStack.push(currentState);
+      const prevState = this.undoStack.pop();
+      this.restoreCanvasState(prevState);
+      this.updateBtnState();
+    }
   },
 
   onRedo() {
-    if (this.redoStack.length === 0 || this.data.processing || this.data.isPreviewing) return;
+    if (this.data.processing || this.data.isPreviewing) return;
 
-    // 保存当前状态到撤销栈
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-    const currentState = this.ctx.getImageData(0, 0, w, h);
-    this.undoStack.push(currentState);
+    // 结果图栈有内容时走结果图级，否则走笔画级
+    const hasResultHistory = this.resultUndoStack.length > 0 || this.resultRedoStack.length > 0;
 
-    // 恢复下一个状态
-    const nextState = this.redoStack.pop();
-    this.restoreCanvasState(nextState);
-
-    this.updateBtnState();
+    if (hasResultHistory) {
+      // 结果图级重做：前进到下一轮结果图
+      if (this.resultRedoStack.length === 0) return;
+      // 保存当前结果状态到撤销栈
+      this.resultUndoStack.push({
+        imageId: this.data.imageId,
+        imageUrl: this.data.imageUrl,
+        previewResultUrl: this.data.previewResultUrl,
+        imagePath: this.data.imagePath,
+        previewTaskId: this.data.previewTaskId
+      });
+      const nextState = this.resultRedoStack.pop();
+      // 恢复下一个结果状态
+      this.ctx.clearRect(0, 0, this.data.canvasW, this.data.canvasH);
+      this.undoStack = [];
+      this.redoStack = [];
+      const localResultUrl = nextState.previewResultUrl && this._localPathCache[nextState.previewResultUrl]
+        ? this._localPathCache[nextState.previewResultUrl]
+        : nextState.previewResultUrl;
+      this.setData({
+        imageId: nextState.imageId,
+        imageUrl: nextState.imageUrl,
+        imagePath: nextState.imagePath,
+        previewResultUrl: localResultUrl,
+        previewStatus: nextState.previewResultUrl ? 'SUCCESS' : '',
+        previewLoaded: !!nextState.previewResultUrl,
+        previewTaskId: nextState.previewTaskId || null
+      });
+      this.updateBtnState();
+      console.log('结果图重做, 前进到:', nextState.previewResultUrl || '原图');
+    } else {
+      // 画布笔画级重做
+      if (this.redoStack.length === 0) return;
+      const w = this.canvas.width;
+      const h = this.canvas.height;
+      const currentState = this.ctx.getImageData(0, 0, w, h);
+      this.undoStack.push(currentState);
+      const nextState = this.redoStack.pop();
+      this.restoreCanvasState(nextState);
+      this.updateBtnState();
+    }
   },
 
   onClear() {
-    if (this.undoStack.length === 0 || this.data.processing || this.data.isPreviewing) return;
+    if (this.data.processing || this.data.isPreviewing) return;
+    if (this.undoStack.length === 0 && this.data.previewStatus !== 'SUCCESS') return;
 
-    // 保存当前状态，以便撤销清空操作
-    this.saveCanvasState();
+    // 清空画布笔画
+    this.ctx.clearRect(0, 0, this.data.canvasW, this.data.canvasH);
+    this.undoStack = [];
     this.redoStack = [];
-
-    // 重新初始化灰色蒙版（相当于清空所有涂抹）
-    this.initGrayMask();
-
-    // 清空后重置撤销栈（只保留清空前的那一个状态）
+    // 清除预览结果，回到当前底图（不清除结果图历史，仍可撤销回之前的结果）
+    this.setData({ previewResultUrl: '', previewStatus: '', previewLoaded: false, previewTaskId: null });
     this.updateBtnState();
+  },
+
+  /**
+   * 预览成功处理：清旧笔画，结果图保持可见，异步上传结果图为下一轮底图
+   */
+  handlePreviewSuccess(resultUrl) {
+    // 保存当前状态到结果图撤销栈（预览成功前的底图状态）
+    this.resultUndoStack.push({
+      imageId: this.data.imageId,
+      imageUrl: this.data.imageUrl,
+      previewResultUrl: this.data.previewResultUrl,
+      imagePath: this.data.imagePath,
+      previewTaskId: this.data.previewTaskId
+    });
+    this.resultRedoStack = [];
+
+    // 拼接完整 URL
+    const fullResultUrl = resultUrl && !resultUrl.startsWith('http')
+      ? getApp().globalData.baseUrl + resultUrl
+      : resultUrl;
+
+    this.setData({ isPreviewing: false });
+    this.updateBtnState();
+
+    // 异步下载到本地路径后再显示，避免真机无法直接加载局域网图片
+    this._baseImageUploadPromise = this._uploadResultAsNewBase(fullResultUrl);
+  },
+
+  /**
+   * 将结果图下载到本地后显示，并上传为新底图
+   */
+  async _uploadResultAsNewBase(resultUrl) {
+    try {
+      const localPath = await api.downloadToLocal(resultUrl);
+      this._localPathCache[resultUrl] = localPath;
+
+      this.setData({
+        imagePath: localPath,
+        previewResultUrl: localPath,
+        previewStatus: 'SUCCESS',
+        previewLoaded: false
+      });
+      this.updateBtnState();
+      wx.showToast({ title: '预览完成', icon: 'success' });
+
+      const res = await api.uploadImage(localPath);
+      if (res.code === 0) {
+        this.setData({ imageId: res.data.imageId, imageUrl: resultUrl });
+      }
+    } catch (e) {
+      console.error('下载/上传结果图失败:', e);
+      wx.showToast({ title: '预览加载失败，请重试', icon: 'none' });
+    } finally {
+      this._baseImageUploadPromise = null;
+    }
   },
 
   /**
@@ -297,13 +466,19 @@ Page({
    */
   async triggerPreview() {
     if (this.data.isPreviewing) return;  // 防止重复调用
+
+    // 等待结果图上传完成（确保 imageId 指向上一轮结果而非原图）
+    if (this._baseImageUploadPromise) {
+      await this._baseImageUploadPromise;
+    }
+
     this.setData({ isPreviewing: true });
     this.updateBtnState();
     
-    console.log('开始触发预览...');
+    console.log('开始触发预览, imageId:', this.data.imageId);
     
     try {
-      // 导出蒙版（只裁剪图片显示区域）
+      // 导出蒙版（仅当前笔画，因为底图已是上一轮结果）
       const maskPath = await canvasHelper.exportMask(
         this.canvas,
         this.data.canvasW,
@@ -320,8 +495,11 @@ Page({
       );
       
       if (!maskPath) throw new Error('蒙版导出失败');
+
+      // 蒙版已导出，清除紫色笔画（避免透在 loading 遮罩上）
+      this.ctx.clearRect(0, 0, this.data.canvasW, this.data.canvasH);
       
-      // 确保 imageId 有效（URL参数传入的是字符串如"42"，有效则直接用）
+      // 确保 imageId 有效
       let imageId = this.data.imageId;
       if (!imageId) {
         wx.showToast({ title: '正在准备...', icon: 'loading' });
@@ -330,18 +508,19 @@ Page({
         this.setData({ imageId });
       }
       
-      // 创建预览任务（不扣积分）
+      // 创建预览任务
       const res = await api.createPreviewTask(imageId, maskPath);
       
       if (res.code === 0) {
-        console.log('预览任务创建成功:', res.data.taskId);
-        this.setData({
-          previewTaskId: res.data.taskId,
-          previewStatus: res.data.status,
-          previewResultUrl: res.data.resultUrl || ''
-        });
-        
-        // 开始轮询预览状态
+        this.setData({ previewTaskId: res.data.taskId });
+
+        // 后端同步返回成功，直接展示结果
+        if (res.data.status === 'SUCCESS' && res.data.resultUrl) {
+          this.handlePreviewSuccess(res.data.resultUrl);
+          return;
+        }
+
+        // 否则轮询等待结果
         this.pollPreviewStatus();
       }
     } catch (e) {
@@ -357,11 +536,10 @@ Page({
    */
   pollPreviewStatus() {
     let pollCount = 0;
-    const maxPolls = 30; // 最多 60 秒（30 * 2s）
+    const maxPolls = 30;
     const expectedTaskId = this.data.previewTaskId;
     
     const poll = () => {
-      // 如果任务已更改（用户重新涂抹），停止旧轮询
       if (this.data.previewTaskId !== expectedTaskId) {
         console.log('任务已更新，停止旧轮询');
         return;
@@ -384,11 +562,7 @@ Page({
           });
           
           if (status === 'SUCCESS') {
-            // 预览完成
-            this.setData({ isPreviewing: false });
-            this.updateBtnState();
-            wx.showToast({ title: '预览完成，点击「确认保存」', icon: 'success' });
-            console.log('预览完成:', resultUrl);
+            this.handlePreviewSuccess(resultUrl);
             return;
           }
           
@@ -399,7 +573,6 @@ Page({
             return;
           }
           
-          // 继续轮询
           pollCount++;
           console.log(`轮询中... (${pollCount}/${maxPolls}) 状态: ${status}`);
           setTimeout(poll, 2000);
@@ -411,7 +584,6 @@ Page({
       });
     };
     
-    // 2 秒后开始第一次轮询
     setTimeout(poll, 2000);
   },
 
@@ -504,7 +676,7 @@ Page({
     this.updateBtnState();
 
     try {
-      // 导出蒙版（不破坏原始画布）
+      // 导出蒙版（仅当前笔画）
       const maskPath = await canvasHelper.exportMask(
         this.canvas,
         this.data.canvasW,
@@ -569,6 +741,8 @@ Page({
     this.currentStroke = null;
     this.undoStack = [];
     this.redoStack = [];
+    this.resultUndoStack = [];
+    this.resultRedoStack = [];
     
     // 清理定时器
     if (this.debounceTimer) {

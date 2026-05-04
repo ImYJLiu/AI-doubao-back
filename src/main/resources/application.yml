@@ -1,13 +1,13 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   tomcat:
     connection-timeout: 90000
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/watermark_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 1234
+    url: ${DB_URL:jdbc:mysql://localhost:3306/watermark_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
@@ -19,23 +19,22 @@ mybatis-plus:
   type-aliases-package: com.doubao.watermark.model.entity
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 # 微信小程序配置
 wx:
   miniapp:
-    appid: wxc64e4f3d616f031c
-    secret: 163e7531528b487cb47024c7b56487ce
+    appid: ${WX_APPID:wxc64e4f3d616f031c}
+    secret: ${WX_SECRET:163e7531528b487cb47024c7b56487ce}
 
 # JWT配置
 jwt:
-  secret: watermark-ai-secret-key-2026-very-long-key-for-security
-  expiration: 604800 # 7天（秒）
+  secret: ${JWT_SECRET:watermark-ai-secret-key-2026-very-long-key-for-security}
+  expiration: 604800
 
 # 存储配置
 storage:
   local:
-    path: ./uploads
+    path: ${STORAGE_PATH:/app/uploads}
 
 # IOPaint 去水印服务配置
 iopaint:

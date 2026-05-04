@@ -64,7 +64,14 @@ Page({
         const { status, resultUrl } = res.data;
 
         if (status === 'SUCCESS' && resultUrl) {
-          this.setData({ resultUrl, loading: false });
+          const fullResultUrl = resultUrl.startsWith('http') ? resultUrl : getApp().globalData.baseUrl + resultUrl;
+          try {
+            const localPath = await api.downloadToLocal(fullResultUrl);
+            this.remoteResultUrl = fullResultUrl;
+            this.setData({ resultUrl: localPath, loading: false });
+          } catch (e) {
+            this.setData({ resultUrl: fullResultUrl, loading: false });
+          }
           this.stopPolling();
         } else if (status === 'FAILED') {
           wx.showToast({ title: '处理失败，请重试', icon: 'none' });
@@ -134,17 +141,23 @@ Page({
     this.setData({ processing: true });
 
     try {
-      const { tempFilePath } = await wx.downloadFile({
-        url: this.data.resultUrl
-      });
-
-      await wx.saveImageToPhotosAlbum({ filePath: tempFilePath });
+      // resultUrl 已是本地临时路径，直接保存；若是远程地址则先下载
+      let filePath = this.data.resultUrl;
+      if (filePath.startsWith('http')) {
+        filePath = await api.downloadToLocal(filePath);
+      }
+      await wx.saveImageToPhotosAlbum({ filePath });
       wx.showToast({ title: '保存成功', icon: 'success' });
     } catch (e) {
-      if (e.errMsg && e.errMsg.includes('saveImageToPhotosAlbum')) {
-        wx.openSetting();
+      if (e.errMsg && e.errMsg.includes('auth deny')) {
+        wx.showModal({
+          title: '需要相册权限',
+          content: '请在设置中允许访问相册',
+          confirmText: '去设置',
+          success: (res) => { if (res.confirm) wx.openSetting(); }
+        });
       } else {
-        wx.showToast({ title: '保存成功', icon: 'success' });
+        wx.showToast({ title: '保存失败，请重试', icon: 'none' });
       }
     } finally {
       this.setData({ processing: false });
@@ -174,7 +187,7 @@ Page({
     return {
       title: '我用AI去掉了图片水印，效果超赞！',
       path: '/pages/index/index',
-      imageUrl: this.data.resultUrl || this.data.imageUrl
+      imageUrl: this.remoteResultUrl || this.data.imageUrl
     };
   },
 

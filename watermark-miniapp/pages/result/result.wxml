@@ -8,13 +8,9 @@
 
   <!-- 处理完成 -->
   <view wx:else>
-    <!-- 对比滑块 -->
-    <view class="comparer-wrapper">
-      <image-comparer
-        beforeSrc="{{imageUrl}}"
-        afterSrc="{{resultUrl}}"
-        height="700"
-      ></image-comparer>
+    <!-- 处理结果图 -->
+    <view class="result-image-wrapper">
+      <image class="result-image" src="{{resultUrl}}" mode="widthFix" bindload="onResultLoad"></image>
     </view>
 
     <!-- 操作按钮 -->

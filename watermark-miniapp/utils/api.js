@@ -1,7 +1,11 @@
 const app = getApp();
 
+const CLOUD_ENV = 'prod-d4gp039vi70f1a3ac';
+const CLOUD_SERVICE = 'springboot-xo46';
+
 /**
- * 统一请求封装（带重试机制）
+ * 统一请求封装 —— 使用 wx.cloud.callContainer
+ * 无需域名白名单，自动处理微信身份
  */
 function request(options) {
   const retries = options._retries || 0;
@@ -12,15 +16,17 @@ function request(options) {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
     loginReady.then(() => {
       const token = wx.getStorageSync('token') || app.globalData.token;
-      wx.request({
-        url: `${app.globalData.baseUrl}${options.url}`,
-        method: options.method || 'GET',
-        data: options.data,
+      wx.cloud.callContainer({
+        config: { env: CLOUD_ENV },
+        path: options.url,
         header: {
           'Content-Type': 'application/json',
+          'X-WX-SERVICE': CLOUD_SERVICE,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...options.header
         },
+        method: options.method || 'GET',
+        data: options.data,
         success(res) {
           if (res.statusCode === 401) {
             if (authRetried) {
@@ -73,11 +79,10 @@ function retryRequest(options, retries, resolve, reject) {
 }
 
 /**
- * 文件上传封装
+ * 文件上传封装 —— wx.cloud.callContainer 不支持文件上传，继续用 HTTPS
  */
 function uploadFile(url, filePath, formData = {}, _authRetried = false) {
   return new Promise((resolve, reject) => {
-    // 等待启动时的登录流程完成，确保 token 已就绪
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
     loginReady.then(() => {
       _doUploadFile(url, filePath, formData, _authRetried, resolve, reject);
@@ -86,22 +91,10 @@ function uploadFile(url, filePath, formData = {}, _authRetried = false) {
 }
 
 function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
-  const token = wx.getStorageSync('token');
-  const globalToken = app.globalData.token;
-  
-  console.log('上传文件 - storage token:', token ? 'exists' : 'missing');
-  console.log('上传文件 - globalData token:', globalToken ? 'exists' : 'missing');
-  
-  const finalToken = token || globalToken;
-  
-  const header = {};
-  if (finalToken) {
-    header['Authorization'] = `Bearer ${finalToken}`;
-    console.log('已设置Authorization header');
-  } else {
-    console.warn('token为空，无法设置Authorization');
-  }
-  
+  const token = wx.getStorageSync('token') || app.globalData.token;
+  const header = { 'X-WX-SERVICE': CLOUD_SERVICE };
+  if (token) header['Authorization'] = `Bearer ${token}`;
+
   wx.uploadFile({
     url: `${app.globalData.baseUrl}${url}`,
     filePath,
@@ -129,7 +122,7 @@ function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
         return;
       }
       try {
-        const data = JSON.parse(res.data);
+        const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
         if (data.code === 0) {
           resolve(data);
         } else {
@@ -147,6 +140,15 @@ function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
   });
 }
 
+/**
+ * 下载远程图片到本地临时路径
+ */
+function downloadToLocal(url) {
+  return new Promise((resolve, reject) => {
+    wx.downloadFile({ url, success: (res) => resolve(res.tempFilePath), fail: reject });
+  });
+}
+
 // ============ API 方法 ============
 
 function getCreditsInfo() {
@@ -161,16 +163,10 @@ function createTask(imageId, maskFilePath) {
   return uploadFile('/api/task/create', maskFilePath, { imageId });
 }
 
-/**
- * 创建预览任务（不扣积分）
- */
 function createPreviewTask(imageId, maskFilePath) {
   return uploadFile('/api/task/preview', maskFilePath, { imageId });
 }
 
-/**
- * 确认预览任务（扣除积分）
- */
 function confirmTask(taskId) {
   return request({ url: `/api/task/${taskId}/confirm`, method: 'POST' });
 }
@@ -195,6 +191,10 @@ function claimShareReward() {
   return request({ url: '/api/credits/share-reward', method: 'POST' });
 }
 
+function batchDeleteHistory(taskIds) {
+  return request({ url: '/api/history/batch-delete', method: 'POST', data: { taskIds: taskIds.map(Number) } });
+}
+
 module.exports = {
   request,
   uploadFile,
@@ -207,5 +207,7 @@ module.exports = {
   getHistory,
   submitFeedback,
   claimAdReward,
-  claimShareReward
+  claimShareReward,
+  batchDeleteHistory,
+  downloadToLocal
 };

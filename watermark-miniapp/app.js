@@ -3,7 +3,9 @@ App({
     userInfo: null,
     token: null,
     credits: 0,
-    baseUrl: ''
+    baseUrl: 'https://springboot-xo46-253721-5-1323340180.sh.run.tcloudbase.com',
+    cloudEnv: 'prod-d4gp039vi70f1a3ac',
+    cloudService: 'springboot-xo46'
   },
 
   // 登录完成的 Promise，供其他模块 await
@@ -12,13 +14,8 @@ App({
   loginPromise: null,
 
   onLaunch() {
-    const envVersion = __wxConfig.envVersion || 'develop';
-    const BASE_URL_MAP = {
-      develop: 'http://localhost:8080',
-      trial: 'http://localhost:8080',
-      release: 'https://your-domain.com'
-    };
-    this.globalData.baseUrl = BASE_URL_MAP[envVersion] || BASE_URL_MAP.develop;
+    // 初始化微信云托管环境
+    wx.cloud.init({ env: 'prod-d4gp039vi70f1a3ac' });
 
     // 保存登录 Promise，让其他模块可以 await 登录完成
     this.loginReadyPromise = this.silentLogin();
@@ -45,19 +42,17 @@ App({
 
         const { code } = await wx.login();
         const res = await new Promise((resolve, reject) => {
-          wx.request({
-            url: `${this.globalData.baseUrl}/api/auth/login`,
+          wx.cloud.callContainer({
+            config: { env: 'prod-d4gp039vi70f1a3ac' },
+            path: '/api/auth/login',
+            header: {
+              'Content-Type': 'application/json',
+              'X-WX-SERVICE': 'springboot-xo46'
+            },
             method: 'POST',
             data: { code },
-            success: (res) => {
-              console.log('wx.request success, statusCode:', res.statusCode);
-              console.log('wx.request success, data:', JSON.stringify(res.data));
-              resolve(res);
-            },
-            fail: (err) => {
-              console.error('wx.request fail:', err);
-              reject(err);
-            }
+            success: resolve,
+            fail: reject
           });
         });
 

@@ -1,6 +1,5 @@
 {
   "usingComponents": {
-    "image-comparer": "../../components/image-comparer/image-comparer",
     "loading-overlay": "../../components/loading-overlay/loading-overlay"
   },
   "navigationBarTitleText": "处理结果"

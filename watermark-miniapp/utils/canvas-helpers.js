@@ -66,22 +66,56 @@ function getCanvasPos(touch, canvasRect) {
 
 /**
  * 导出蒙版为 PNG 文件
- * 不修改主画布，直接导出原始内容（灰色半透明 + 透明涂抹区域）
- * 黑白转换交给后端处理，避免前端 Canvas 操作兼容性问题
+ * 前端画布内容为：深紫色笔画（alpha>0）+ 透明区域（alpha=0）
+ * 后端期望格式：灰色半透明区域（alpha>=64，保留）+ 透明区域（alpha<64，修复）
+ * 因此导出时需要转换：有笔画→透明（修复），无笔画→灰色半透明（保留）
  */
 function exportMask(canvas, width, height, dpr, origWidth, origHeight, displayArea) {
   return new Promise((resolve) => {
     console.log('开始导出蒙版, canvas尺寸:', canvas.width, 'x', canvas.height);
 
+    const ctx = canvas.getContext('2d');
+    const canvasW = canvas.width;
+    const canvasH = canvas.height;
+
+    // 1. 保存当前画布内容（深紫色笔画）
+    const currentData = ctx.getImageData(0, 0, canvasW, canvasH);
+
+    // 2. 创建导出用蒙版数据：笔画区域→透明，无笔画区域→灰色半透明
+    const exportData = ctx.createImageData(canvasW, canvasH);
+    for (let i = 0; i < currentData.data.length; i += 4) {
+      const alpha = currentData.data[i + 3];
+      if (alpha > 10) {
+        // 有笔画（涂抹区域）→ 透明（后端识别为需修复区域）
+        exportData.data[i] = 0;
+        exportData.data[i + 1] = 0;
+        exportData.data[i + 2] = 0;
+        exportData.data[i + 3] = 0;
+      } else {
+        // 无笔画（未涂抹区域）→ 灰色半透明（后端识别为保留区域）
+        exportData.data[i] = 128;
+        exportData.data[i + 1] = 128;
+        exportData.data[i + 2] = 128;
+        exportData.data[i + 3] = 128;
+      }
+    }
+
+    // 3. 临时替换画布内容为蒙版格式
+    ctx.putImageData(exportData, 0, 0);
+
+    // 4. 导出蒙版
     wx.canvasToTempFilePath({
       canvas: canvas,
       fileType: 'png',
       quality: 1,
       success: (res) => {
+        // 5. 恢复当前画布内容
+        ctx.putImageData(currentData, 0, 0);
         console.log('蒙版已导出:', res.tempFilePath);
         resolve(res.tempFilePath);
       },
       fail: (err) => {
+        ctx.putImageData(currentData, 0, 0);
         console.error('蒙版导出失败:', err);
         resolve(null);
       }

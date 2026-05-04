@@ -19,13 +19,25 @@
 
   <!-- 画布区域 -->
   <view class="canvas-area">
+    <!-- 原图始终存在，避免切换时黑屏（优先用本地路径，iOS不支持HTTP图片渲染） -->
     <image
       class="source-image"
-      src="{{imageUrl}}"
+      src="{{imagePath || imageUrl}}"
       mode="aspectFit"
       bindload="onImageLoad"
+      binderror="onImageError"
     ></image>
-    
+
+    <!-- 结果图叠加（加载完成后淡入，避免黑屏） -->
+    <image
+      wx:if="{{previewResultUrl}}"
+      class="source-image result-preview {{previewLoaded ? 'loaded' : 'loading'}}"
+      src="{{previewResultUrl}}"
+      mode="aspectFit"
+      bindload="onPreviewImageLoad"
+    ></image>
+
+    <!-- 画布始终在最上层，预览成功后画布已清空（透明），结果图自然透出 -->
     <canvas
       type="2d"
       id="mask-canvas"
@@ -38,29 +50,9 @@
 
   <!-- 底部控制栏 -->
   <view class="controls">
-    <!-- 工具切换 -->
-    <view class="tools">
-      <view class="tool-item {{activeTool === 'brush' ? 'active' : ''}}" data-tool="brush" bindtap="switchTool">
-        <text class="tool-emoji">🖌️</text>
-        <text class="tool-name">画笔</text>
-      </view>
-      <view class="tool-item {{canClear ? '' : 'disabled'}}" bindtap="onClear">
-        <text class="tool-emoji">🧹</text>
-        <text class="tool-name">清空</text>
-      </view>
-      <view class="tool-item disabled">
-        <text class="tool-emoji">🔍</text>
-        <text class="tool-name">缩放</text>
-      </view>
-      <view class="tool-item disabled">
-        <text class="tool-emoji">✂️</text>
-        <text class="tool-name">套索</text>
-      </view>
-    </view>
-
     <!-- 笔刷大小 -->
     <view class="brush-size">
-      <text class="size-label">笔刷大小</text>
+      <text class="size-label">🖌️ 笔刷大小</text>
       <slider
         class="size-slider"
         min="5"
@@ -74,6 +66,6 @@
     </view>
   </view>
 
-  <!-- 加载遮罩 -->
-  <loading-overlay show="{{processing}}" title="AI处理中" desc="正在智能消除水印，请稍候..."></loading-overlay>
+  <!-- 加载遮罩：处理中 / 预览生成中 -->
+  <loading-overlay show="{{processing || isPreviewing}}" title="{{isPreviewing ? 'AI预览生成中' : 'AI处理中'}}" desc="{{isPreviewing ? '正在智能消除水印预览...' : '正在智能消除水印，请稍候...'}}"></loading-overlay>
 </view>

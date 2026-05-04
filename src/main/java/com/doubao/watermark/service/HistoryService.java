@@ -26,6 +26,7 @@ public class HistoryService {
         LambdaQueryWrapper<Task> query = new LambdaQueryWrapper<Task>()
                 .eq(Task::getUserId, userId)
                 .eq(Task::getStatus, "SUCCESS")
+                .eq(Task::getTaskType, "CONFIRMED")
                 .orderByDesc(Task::getCreatedAt)
                 .last("LIMIT " + ((page - 1) * size) + ", " + size);
 
@@ -43,7 +44,7 @@ public class HistoryService {
             vo.setTaskId(task.getId());
             vo.setThumbUrl(task.getResultThumbnailUrl() != null ? task.getResultThumbnailUrl() : task.getResultUrl());
             vo.setResultUrl(task.getResultUrl());
-            vo.setCreatedAt(task.getCreatedAt().toString().substring(0, 10));
+            vo.setCreatedAt(task.getCreatedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
             return vo;
         }).collect(Collectors.toList());
     }

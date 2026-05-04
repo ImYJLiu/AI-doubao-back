@@ -13,10 +13,10 @@
 
   <!-- Banner -->
   <view class="banner">
-    <image class="banner-bg" src="/images/banner-placeholder.png" mode="aspectFill"></image>
+    <image class="banner-bg" src="/images/banner.png" mode="aspectFill"></image>
     <view class="banner-overlay">
       <text class="banner-title">智能擦除，不留痕迹</text>
-      <text class="banner-desc">采用 XXAI 2.0 修复算法，完美还原背景</text>
+      <text class="banner-desc">涂抹水印区域，AI智能修复还原原图</text>
     </view>
   </view>
 

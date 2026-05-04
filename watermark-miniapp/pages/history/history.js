@@ -18,6 +18,11 @@ Page({
     this.loadHistory();
   },
 
+  onShow() {
+    this.setData({ page: 1 });
+    this.loadHistory();
+  },
+
   /**
    * 加载历史记录
    */
@@ -27,8 +32,14 @@ Page({
     try {
       const res = await api.getHistory(this.data.page, 10, period);
       if (res.code === 0) {
-        // res.data 直接是数组（后端返回 Result<List<HistoryItemVO>>）
-        const list = Array.isArray(res.data) ? res.data : [];
+        const rawList = Array.isArray(res.data) ? res.data : [];
+        const baseUrl = getApp().globalData.baseUrl;
+        const list = rawList.map(item => ({
+          ...item,
+          taskId: String(item.taskId),
+          thumbUrl: item.thumbUrl && item.thumbUrl.startsWith('http') ? item.thumbUrl : baseUrl + item.thumbUrl,
+          resultUrl: item.resultUrl && item.resultUrl.startsWith('http') ? item.resultUrl : baseUrl + item.resultUrl
+        }));
         const newList = this.data.page === 1 ? list : [...this.data.historyList, ...list];
         this.setData({
           historyList: newList,
@@ -36,22 +47,24 @@ Page({
         });
       }
     } catch (e) {
-      // 后端未就绪，使用模拟数据
-      this.loadMockHistory();
+      // 后端未就绪时不渲染任何内容
+      if (this.data.page === 1) {
+        this.setData({ historyList: [] });
+      }
     }
   },
 
   /**
-   * 模拟历史数据
+   * 图片加载失败时下载到本地再显示
    */
-  loadMockHistory() {
-    const mockData = [
-      { taskId: '1', thumbUrl: '/images/demo-after.png', resultUrl: '/images/demo-after.png', createdAt: '2026-04-10' },
-      { taskId: '2', thumbUrl: '/images/demo-before.png', resultUrl: '/images/demo-before.png', createdAt: '2026-04-09' },
-      { taskId: '3', thumbUrl: '/images/banner-placeholder.png', resultUrl: '/images/banner-placeholder.png', createdAt: '2026-04-08' },
-      { taskId: '4', thumbUrl: '/images/demo-after.png', resultUrl: '/images/demo-after.png', createdAt: '2026-03-28' }
-    ];
-    this.setData({ historyList: mockData });
+  async onImgError(e) {
+    const index = e.currentTarget.dataset.index;
+    const item = this.data.historyList[index];
+    if (!item || !item.thumbUrl) return;
+    try {
+      const localPath = await api.downloadToLocal(item.thumbUrl);
+      this.setData({ [`historyList[${index}].thumbUrl`]: localPath });
+    } catch (err) {}
   },
 
   /**
@@ -93,6 +106,12 @@ Page({
         selectedCount: count,
         allSelected: count === this.data.historyList.length
       });
+    } else {
+      const url = e.currentTarget.dataset.url;
+      if (url) {
+        // previewImage 内部会自动下载，支持局域网地址
+        wx.previewImage({ urls: [url], current: url });
+      }
     }
   },
 
@@ -124,14 +143,16 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
-            await wx.request({
-              url: `${getApp().globalData.baseUrl}/api/history/batch-delete`,
-              method: 'POST',
-              data: { taskIds: ids }
-            });
-          } catch (e) {}
+            const result = await api.batchDeleteHistory(ids);
+            if (result.code !== 0) {
+              wx.showToast({ title: result.message || '删除失败', icon: 'none' });
+              return;
+            }
+          } catch (e) {
+            wx.showToast({ title: '删除失败，请重试', icon: 'none' });
+            return;
+          }
 
-          // 本地删除
           const newList = this.data.historyList.filter(item => !this.data.selectedItems[item.taskId]);
           this.setData({
             historyList: newList,

@@ -26,17 +26,18 @@
       class="grid-item {{batchMode && selectedItems[item.taskId] ? 'selected' : ''}}"
       bindtap="onItemClick"
       data-id="{{item.taskId}}"
+      data-url="{{item.resultUrl}}"
     >
-      <image class="item-img" src="{{item.thumbUrl}}" mode="aspectFill"></image>
+      <image class="item-img" src="{{item.thumbUrl}}" mode="aspectFill" binderror="onImgError" data-index="{{index}}"></image>
       <view class="item-info">
         <text class="item-date">{{item.createdAt}}</text>
         <view class="item-actions" wx:if="{{!batchMode}}">
           <text class="action-btn" bindtap="downloadItem" data-url="{{item.resultUrl}}">⬇️</text>
         </view>
         <view class="item-checkbox" wx:if="{{batchMode}}">
-          <text class="checkbox {{selectedItems[item.taskId] ? 'checked' : ''}}">
+          <view class="checkbox {{selectedItems[item.taskId] ? 'checked' : ''}}">
             {{selectedItems[item.taskId] ? '✓' : ''}}
-          </text>
+          </view>
         </view>
       </view>
     </view>
@@ -56,7 +57,7 @@
   <!-- 批量操作底部栏 -->
   <view class="batch-bar" wx:if="{{batchMode}}">
     <view class="select-all" bindtap="selectAll">
-      <text class="checkbox {{allSelected ? 'checked' : ''}}">{{allSelected ? '✓' : ''}}</text>
+      <view class="checkbox {{allSelected ? 'checked' : ''}}">{{allSelected ? '✓' : ''}}</view>
       <text>全选</text>
     </view>
     <button class="btn-delete" bindtap="batchDelete" disabled="{{selectedCount === 0}}">

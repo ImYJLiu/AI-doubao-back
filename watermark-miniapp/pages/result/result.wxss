@@ -38,11 +38,17 @@
   color: var(--color-text-secondary);
 }
 
-/* 对比区域 */
-.comparer-wrapper {
+/* 结果图片 */
+.result-image-wrapper {
   margin-top: 24rpx;
   border-radius: var(--radius-md);
   overflow: hidden;
+  background: #f3f4f6;
+}
+
+.result-image {
+  width: 100%;
+  display: block;
 }
 
 /* 操作按钮 */

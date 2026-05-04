@@ -25,9 +25,7 @@
         <text class="task-title">观看激励视频</text>
         <text class="task-desc">完整观看广告即领 +3 次</text>
       </view>
-      <button class="task-btn green" bindtap="watchAd">
-        {{adWatching ? '观看中...' : '去完成'}}
-      </button>
+      <button class="task-btn green" bindtap="watchAd">去完成</button>
     </view>
 
     <!-- 分享好友 -->
@@ -43,7 +41,7 @@
     </view>
 
     <!-- VIP -->
-    <view class="task-card vip-card">
+    <view class="task-card vip-card" bindtap="openVip">
       <view class="task-icon gold">
         <text>👑</text>
       </view>
@@ -55,15 +53,6 @@
       <view class="task-btn vip">
         <text class="vip-price">¥9.9/月</text>
       </view>
-    </view>
-  </view>
-
-  <!-- 广告播放遮罩 -->
-  <view class="ad-overlay" wx:if="{{adWatching}}" catchtouchmove="true">
-    <view class="ad-content">
-      <text class="ad-tip">广告播放中...</text>
-      <text class="ad-countdown">剩余 {{adCountdown}}秒</text>
-      <text class="ad-hint">完整观看即可获得 +3 次</text>
     </view>
   </view>
 </view>

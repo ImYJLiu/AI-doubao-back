@@ -4,10 +4,13 @@ import com.doubao.watermark.common.BusinessException;
 import com.doubao.watermark.common.UserContext;
 import com.doubao.watermark.mapper.ImageMapper;
 import com.doubao.watermark.model.entity.Image;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
@@ -61,8 +64,28 @@ public class ImageService {
         Map<String, Object> result = new HashMap<>();
         result.put("imageId", image.getId());
         result.put("imageUrl", imageUrl);
-        // 返回完整URL，供小程序使用
-        String fullUrl = "http://localhost:" + serverPort + imageUrl;
+        // 动态获取请求的 host 拼接完整 URL，真机调试时不走 localhost
+        String baseUrl = "";
+        try {
+            ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest req = attrs.getRequest();
+                String scheme = req.getScheme();
+                String serverName = req.getServerName();
+                int port = req.getServerPort();
+                if ((scheme.equals("http") && port == 80) || (scheme.equals("https") && port == 443)) {
+                    baseUrl = scheme + "://" + serverName;
+                } else {
+                    baseUrl = scheme + "://" + serverName + ":" + port;
+                }
+            }
+        } catch (Exception e) {
+            // fallback
+        }
+        if (baseUrl.isEmpty()) {
+            baseUrl = "http://localhost:" + serverPort;
+        }
+        String fullUrl = baseUrl + imageUrl;
         result.put("fullImageUrl", fullUrl);
         log.info("图片上传成功, imageId: {}, fullUrl: {}", image.getId(), fullUrl);
         return result;

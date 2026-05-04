@@ -1,0 +1,15 @@
+{
+  "containerPort": 8080,
+  "buildDir": "",
+  "dockerfile": "Dockerfile",
+  "envVariables": [
+    "DB_URL",
+    "DB_USERNAME",
+    "DB_PASSWORD",
+    "WX_APPID",
+    "WX_SECRET",
+    "JWT_SECRET",
+    "IOPAINT_ENDPOINT",
+    "STORAGE_PATH"
+  ]
+}
