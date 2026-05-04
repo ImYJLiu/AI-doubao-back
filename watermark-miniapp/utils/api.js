@@ -1,11 +1,7 @@
 const app = getApp();
 
-const CLOUD_ENV = 'prod-d4gp039vi70f1a3ac';
-const CLOUD_SERVICE = 'springboot-xo46';
-
 /**
- * 统一请求封装 —— 使用 wx.cloud.callContainer
- * 无需域名白名单，自动处理微信身份
+ * 统一请求封装 —— 使用 wx.request
  */
 function request(options) {
   const retries = options._retries || 0;
@@ -16,12 +12,10 @@ function request(options) {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
     loginReady.then(() => {
       const token = wx.getStorageSync('token') || app.globalData.token;
-      wx.cloud.callContainer({
-        config: { env: CLOUD_ENV },
-        path: options.url,
+      wx.request({
+        url: app.globalData.baseUrl + options.url,
         header: {
           'Content-Type': 'application/json',
-          'X-WX-SERVICE': CLOUD_SERVICE,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           ...options.header
         },
@@ -92,7 +86,7 @@ function uploadFile(url, filePath, formData = {}, _authRetried = false) {
 
 function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
   const token = wx.getStorageSync('token') || app.globalData.token;
-  const header = { 'X-WX-SERVICE': CLOUD_SERVICE };
+  const header = {};
   if (token) header['Authorization'] = `Bearer ${token}`;
 
   wx.uploadFile({

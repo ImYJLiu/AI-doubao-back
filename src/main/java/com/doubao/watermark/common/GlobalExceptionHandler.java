@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -16,6 +17,12 @@ public class GlobalExceptionHandler {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
         return Result.error(e.getCode(), e.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<?> handleNoResourceFound(NoResourceFoundException e, HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        return Result.error(404, "Not Found");
     }
 
     @ExceptionHandler(Exception.class)
