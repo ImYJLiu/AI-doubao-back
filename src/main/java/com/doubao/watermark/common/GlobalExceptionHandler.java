@@ -1,7 +1,5 @@
 package com.doubao.watermark.common;
 
-package com.doubao.watermark.common;
-
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;

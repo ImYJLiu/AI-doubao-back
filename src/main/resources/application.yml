@@ -34,7 +34,7 @@ jwt:
 # 存储配置
 storage:
   local:
-    path: ${STORAGE_PATH:/app/uploads}
+    path: ${STORAGE_PATH:./uploads}
 
 # IOPaint 去水印服务配置
 iopaint:
