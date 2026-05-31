@@ -24,7 +24,7 @@ mybatis-plus:
 wx:
   miniapp:
     appid: ${WX_APPID:wxc64e4f3d616f031c}
-    secret: ${WX_SECRET:163e7531528b487cb47024c7b56487ce}
+    secret: ${WX_SECRET:534d9c005f69ae5aaaa820a20e893aa3}
 
 # JWT配置
 jwt:
