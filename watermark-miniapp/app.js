@@ -24,6 +24,7 @@ App({
 
     this.loginPromise = (async () => {
       try {
+        // 已有 token 且有效，直接返回
         const token = wx.getStorageSync('token');
         if (token) {
           this.globalData.token = token;
@@ -35,6 +36,7 @@ App({
           return true;
         }
 
+        // 获取 code 并请求登录（code 只能用一次）
         const { code } = await wx.login();
         const res = await new Promise((resolve, reject) => {
           wx.request({
@@ -56,12 +58,19 @@ App({
           wx.setStorageSync('userInfo', { ...user, credits });
           return true;
         }
-        console.log('登录响应code不为0:', res.data);
+        
+        // 登录失败，清除状态
+        console.error('登录失败:', res.data);
+        wx.removeStorageSync('token');
+        wx.removeStorageSync('userInfo');
+        this.globalData.token = null;
+        this.globalData.userInfo = null;
         return false;
       } catch (e) {
-        console.error('静默登录失败:', e);
+        console.error('静默登录异常:', e);
         return false;
       } finally {
+        // 登录完成后清空 Promise，允许下次重新登录
         this.loginPromise = null;
       }
     })();

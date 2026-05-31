@@ -9,8 +9,22 @@ function request(options) {
 
   return new Promise((resolve, reject) => {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
-    loginReady.then(() => {
+    loginReady.then((loginSuccess) => {
+      // 登录失败，不发请求
+      if (!loginSuccess) {
+        wx.showToast({ title: '登录失败，请重新进入小程序', icon: 'none' });
+        reject({ code: 401, message: '登录失败' });
+        return;
+      }
+
       const token = wx.getStorageSync('token') || app.globalData.token;
+      // token 不存在，说明登录未完成
+      if (!token) {
+        wx.showToast({ title: '登录中，请稍候', icon: 'none' });
+        reject({ code: 401, message: '未登录' });
+        return;
+      }
+
       wx.request({
         url: app.globalData.baseUrl + options.url,
         header: {
@@ -22,7 +36,7 @@ function request(options) {
         data: options.data,
         success(res) {
           if (res.statusCode === 401) {
-            // code 只能使用一次，401 时不重试登录，直接提示重新进入
+            // token 过期，清除本地状态，提示重新进入
             wx.removeStorageSync('token');
             wx.removeStorageSync('userInfo');
             app.globalData.token = null;
@@ -69,7 +83,22 @@ function retryRequest(options, retries, resolve, reject) {
 function uploadFile(url, filePath, formData = {}) {
   return new Promise((resolve, reject) => {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
-    loginReady.then(() => {
+    loginReady.then((loginSuccess) => {
+      // 登录失败，不发请求
+      if (!loginSuccess) {
+        wx.showToast({ title: '登录失败，请重新进入小程序', icon: 'none' });
+        reject({ code: 401, message: '登录失败' });
+        return;
+      }
+
+      const token = wx.getStorageSync('token') || app.globalData.token;
+      // token 不存在，说明登录未完成
+      if (!token) {
+        wx.showToast({ title: '登录中，请稍候', icon: 'none' });
+        reject({ code: 401, message: '未登录' });
+        return;
+      }
+
       _doUploadFile(url, filePath, formData, resolve, reject);
     });
   });
@@ -89,7 +118,7 @@ function _doUploadFile(url, filePath, formData, resolve, reject) {
     timeout: 60000,
     success(res) {
       if (res.statusCode === 401) {
-        // code 只能使用一次，401 时不重试登录，直接提示重新进入
+        // token 过期，清除本地状态，提示重新进入
         wx.removeStorageSync('token');
         wx.removeStorageSync('userInfo');
         app.globalData.token = null;
