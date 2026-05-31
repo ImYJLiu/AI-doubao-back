@@ -6,7 +6,6 @@ const app = getApp();
 function request(options) {
   const retries = options._retries || 0;
   const maxRetries = options.maxRetries !== undefined ? options.maxRetries : 2;
-  const authRetried = options._authRetried || false;
 
   return new Promise((resolve, reject) => {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
@@ -23,21 +22,13 @@ function request(options) {
         data: options.data,
         success(res) {
           if (res.statusCode === 401) {
-            if (authRetried) {
-              wx.showToast({ title: '登录已过期，请重新进入', icon: 'none' });
-              reject({ code: 401, message: '登录已过期' });
-              return;
-            }
+            // code 只能使用一次，401 时不重试登录，直接提示重新进入
             wx.removeStorageSync('token');
+            wx.removeStorageSync('userInfo');
             app.globalData.token = null;
-            app.silentLogin().then((success) => {
-              if (success) {
-                request({ ...options, _authRetried: true }).then(resolve).catch(reject);
-              } else {
-                wx.showToast({ title: '登录失败，请重新进入', icon: 'none' });
-                reject({ code: 401, message: '登录失败' });
-              }
-            });
+            app.globalData.userInfo = null;
+            wx.showToast({ title: '登录已过期，请重新进入小程序', icon: 'none', duration: 2000 });
+            reject({ code: 401, message: '登录已过期' });
             return;
           }
           if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -75,16 +66,16 @@ function retryRequest(options, retries, resolve, reject) {
 /**
  * 文件上传封装 —— wx.cloud.callContainer 不支持文件上传，继续用 HTTPS
  */
-function uploadFile(url, filePath, formData = {}, _authRetried = false) {
+function uploadFile(url, filePath, formData = {}) {
   return new Promise((resolve, reject) => {
     const loginReady = app.loginReadyPromise || Promise.resolve(true);
     loginReady.then(() => {
-      _doUploadFile(url, filePath, formData, _authRetried, resolve, reject);
+      _doUploadFile(url, filePath, formData, resolve, reject);
     });
   });
 }
 
-function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
+function _doUploadFile(url, filePath, formData, resolve, reject) {
   const token = wx.getStorageSync('token') || app.globalData.token;
   const header = {};
   if (token) header['Authorization'] = `Bearer ${token}`;
@@ -98,21 +89,13 @@ function _doUploadFile(url, filePath, formData, _authRetried, resolve, reject) {
     timeout: 60000,
     success(res) {
       if (res.statusCode === 401) {
-        if (_authRetried) {
-          wx.showToast({ title: '登录已过期，请重新进入', icon: 'none' });
-          reject({ code: 401, message: '登录已过期' });
-          return;
-        }
+        // code 只能使用一次，401 时不重试登录，直接提示重新进入
         wx.removeStorageSync('token');
+        wx.removeStorageSync('userInfo');
         app.globalData.token = null;
-        app.silentLogin().then((success) => {
-          if (success) {
-            uploadFile(url, filePath, formData, true).then(resolve).catch(reject);
-          } else {
-            wx.showToast({ title: '登录失败，请重新进入', icon: 'none' });
-            reject({ code: 401, message: '登录失败' });
-          }
-        });
+        app.globalData.userInfo = null;
+        wx.showToast({ title: '登录已过期，请重新进入小程序', icon: 'none', duration: 2000 });
+        reject({ code: 401, message: '登录已过期' });
         return;
       }
       try {
