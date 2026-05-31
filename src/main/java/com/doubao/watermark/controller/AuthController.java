@@ -4,10 +4,12 @@ import com.doubao.watermark.common.Result;
 import com.doubao.watermark.model.dto.LoginRequest;
 import com.doubao.watermark.model.vo.LoginResponse;
 import com.doubao.watermark.service.AuthService;
+import com.google.gson.JsonObject;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -27,6 +30,7 @@ public class AuthController {
     @PostMapping("/login")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                        HttpServletResponse httpResponse) {
+        log.error("login error {}", request);
         LoginResponse response = authService.login(request.getCode());
 
         // 设置 token cookie，让 wx.uploadFile 自动携带（激活 AuthInterceptor 的 cookie 回退）
