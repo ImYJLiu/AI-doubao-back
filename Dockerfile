@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
 # 创建 Python 虚拟环境并安装 IOPaint
 RUN python3 -m venv /app/iopaint-env && \
     /app/iopaint-env/bin/pip install --upgrade pip && \
-    /app/iopaint-env/bin/pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cpu && \
+    /app/iopaint-env/bin/pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
     /app/iopaint-env/bin/pip install iopaint
 
 # Copy Java application
