@@ -1,4 +1,5 @@
 target/
+!target/watermark-remover-1.0.0.jar
 uploads/
 watermark-miniapp/
 *.log
